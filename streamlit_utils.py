@@ -1,12 +1,27 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-import yfinance as yf
+
+# Handle optional imports gracefully
+try:
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from plotly.subplots import make_subplots
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    st.warning("Plotly not available for charts")
+    PLOTLY_AVAILABLE = False
+    go = px = None
+
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    st.warning("yfinance not available for real-time stock data")
+    YFINANCE_AVAILABLE = False
+    yf = None
 
 def format_currency(value: float) -> str:
     """Format a number as currency"""
@@ -23,8 +38,12 @@ def format_percentage(value: float) -> str:
     """Format a number as percentage"""
     return f"{value:.2f}%"
 
-def create_stock_chart(ticker: str, days: int = 30) -> go.Figure:
+def create_stock_chart(ticker: str, days: int = 30):
     """Create a stock price chart using plotly"""
+    if not PLOTLY_AVAILABLE or not YFINANCE_AVAILABLE:
+        st.warning("Chart creation requires plotly and yfinance libraries")
+        return None
+        
     try:
         # Get stock data
         stock = yf.Ticker(ticker)
@@ -61,8 +80,12 @@ def create_stock_chart(ticker: str, days: int = 30) -> go.Figure:
         st.error(f"Error creating stock chart: {str(e)}")
         return None
 
-def create_volume_chart(ticker: str, days: int = 30) -> go.Figure:
+def create_volume_chart(ticker: str, days: int = 30):
     """Create a volume chart"""
+    if not PLOTLY_AVAILABLE or not YFINANCE_AVAILABLE:
+        st.warning("Volume chart requires plotly and yfinance libraries")
+        return None
+        
     try:
         stock = yf.Ticker(ticker)
         end_date = datetime.now()
@@ -96,6 +119,10 @@ def create_volume_chart(ticker: str, days: int = 30) -> go.Figure:
 
 def get_stock_info(ticker: str) -> Dict[str, Any]:
     """Get basic stock information"""
+    if not YFINANCE_AVAILABLE:
+        st.warning("Stock info requires yfinance library")
+        return {'name': ticker, 'sector': 'N/A', 'industry': 'N/A'}
+        
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
@@ -117,7 +144,7 @@ def get_stock_info(ticker: str) -> Dict[str, Any]:
         }
     except Exception as e:
         st.error(f"Error getting stock info: {str(e)}")
-        return {}
+        return {'name': ticker, 'sector': 'N/A', 'industry': 'N/A'}
 
 def create_metrics_dashboard(stock_info: Dict[str, Any]):
     """Create a metrics dashboard for stock information"""
@@ -161,8 +188,12 @@ def create_metrics_dashboard(stock_info: Dict[str, Any]):
             format_percentage(dividend_yield * 100) if dividend_yield else "N/A"
         )
 
-def create_risk_gauge(risk_level: str, risk_score: float = 0.5) -> go.Figure:
+def create_risk_gauge(risk_level: str, risk_score: float = 0.5):
     """Create a risk gauge chart"""
+    if not PLOTLY_AVAILABLE:
+        st.warning("Risk gauge requires plotly library")
+        return None
+        
     fig = go.Figure(go.Indicator(
         mode = "gauge+number+delta",
         value = risk_score,
@@ -188,8 +219,12 @@ def create_risk_gauge(risk_level: str, risk_score: float = 0.5) -> go.Figure:
     fig.update_layout(height=300)
     return fig
 
-def create_sentiment_pie_chart(sentiment_data: Dict[str, float]) -> go.Figure:
+def create_sentiment_pie_chart(sentiment_data: Dict[str, float]):
     """Create a pie chart for sentiment analysis"""
+    if not PLOTLY_AVAILABLE:
+        st.warning("Sentiment chart requires plotly library")
+        return None
+        
     labels = list(sentiment_data.keys())
     values = list(sentiment_data.values())
     

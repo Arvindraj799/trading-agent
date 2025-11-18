@@ -5,10 +5,25 @@ import json
 import os
 from typing import Dict, Any, Optional
 import traceback
-from dotenv import load_dotenv
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
+
+# Handle optional imports gracefully
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    st.warning("python-dotenv not available. Environment variables must be set manually.")
+    def load_dotenv():
+        pass
+
+try:
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from plotly.subplots import make_subplots
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    st.error("Plotly not available. Charts will be disabled.")
+    PLOTLY_AVAILABLE = False
+    go = None
+    px = None
 
 # Load environment variables
 load_dotenv()
@@ -17,13 +32,30 @@ load_dotenv()
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
-# Import utility functions
-from streamlit_utils import (
-    create_stock_chart, create_volume_chart, get_stock_info,
-    create_metrics_dashboard, create_risk_gauge, create_sentiment_pie_chart,
-    export_analysis_to_json, display_config_summary, validate_configuration,
-    format_currency, format_percentage
-)
+# Import utility functions with fallback
+try:
+    from streamlit_utils import (
+        create_stock_chart, create_volume_chart, get_stock_info,
+        create_metrics_dashboard, create_risk_gauge, create_sentiment_pie_chart,
+        export_analysis_to_json, display_config_summary, validate_configuration,
+        format_currency, format_percentage
+    )
+    UTILS_AVAILABLE = True
+except ImportError as e:
+    st.error(f"Streamlit utilities not available: {e}. Some features will be disabled.")
+    UTILS_AVAILABLE = False
+    # Create dummy functions
+    def create_stock_chart(*args, **kwargs): return None
+    def create_volume_chart(*args, **kwargs): return None
+    def get_stock_info(*args, **kwargs): return {}
+    def create_metrics_dashboard(*args, **kwargs): pass
+    def create_risk_gauge(*args, **kwargs): return None
+    def create_sentiment_pie_chart(*args, **kwargs): return None
+    def export_analysis_to_json(*args, **kwargs): return ""
+    def display_config_summary(*args, **kwargs): pass
+    def validate_configuration(*args, **kwargs): return []
+    def format_currency(value): return f"${value:.2f}"
+    def format_percentage(value): return f"{value:.2f}%"
 
 # Page configuration
 st.set_page_config(
@@ -413,27 +445,33 @@ def display_analysis_results(analysis_result: Dict[str, Any]):
     with tab6:
         st.subheader("📈 Stock Charts and Analysis")
         
-        # Stock price chart
-        price_chart = create_stock_chart(analysis_result['ticker'], days=30)
-        if price_chart:
-            st.plotly_chart(price_chart, use_container_width=True)
-        
-        # Volume chart
-        volume_chart = create_volume_chart(analysis_result['ticker'], days=30)
-        if volume_chart:
-            st.plotly_chart(volume_chart, use_container_width=True)
-        
-        # Risk gauge (example)
-        col1, col2 = st.columns(2)
-        with col1:
-            risk_gauge = create_risk_gauge("Medium", 0.6)
-            st.plotly_chart(risk_gauge, use_container_width=True)
-        
-        with col2:
-            # Sentiment pie chart (example data)
-            sentiment_data = {"Positive": 40, "Negative": 30, "Neutral": 30}
-            sentiment_chart = create_sentiment_pie_chart(sentiment_data)
-            st.plotly_chart(sentiment_chart, use_container_width=True)
+        if PLOTLY_AVAILABLE and UTILS_AVAILABLE:
+            # Stock price chart
+            price_chart = create_stock_chart(analysis_result['ticker'], days=30)
+            if price_chart:
+                st.plotly_chart(price_chart, use_container_width=True)
+            
+            # Volume chart
+            volume_chart = create_volume_chart(analysis_result['ticker'], days=30)
+            if volume_chart:
+                st.plotly_chart(volume_chart, use_container_width=True)
+            
+            # Risk gauge (example)
+            col1, col2 = st.columns(2)
+            with col1:
+                risk_gauge = create_risk_gauge("Medium", 0.6)
+                if risk_gauge:
+                    st.plotly_chart(risk_gauge, use_container_width=True)
+            
+            with col2:
+                # Sentiment pie chart (example data)
+                sentiment_data = {"Positive": 40, "Negative": 30, "Neutral": 30}
+                sentiment_chart = create_sentiment_pie_chart(sentiment_data)
+                if sentiment_chart:
+                    st.plotly_chart(sentiment_chart, use_container_width=True)
+        else:
+            st.warning("📈 Charts are disabled due to missing dependencies (plotly). Core analysis functionality remains available.")
+            st.info("Stock analysis and agent reports are still fully functional in other tabs.")
     
     with tab7:
         st.subheader("💾 Export Analysis")
