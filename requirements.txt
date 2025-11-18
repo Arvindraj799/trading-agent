@@ -24,3 +24,9 @@ rich
 questionary
 langchain_anthropic
 langchain-google-genai
+streamlit
+plotly
+numpy
+matplotlib
+seaborn
+python-dotenv
