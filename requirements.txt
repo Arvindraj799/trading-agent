@@ -1,6 +1,9 @@
 # Core Streamlit and Web UI dependencies
 streamlit>=1.28.0
 plotly>=5.22.0
+
+# Local package
+-e .
 pandas>=1.5.0
 numpy>=1.21.0
 matplotlib>=3.5.0
