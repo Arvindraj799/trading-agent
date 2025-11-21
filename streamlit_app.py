@@ -27,22 +27,19 @@ except ImportError:
 # Load environment variables
 load_dotenv()
 
-# Import TradingAgents components
+# Import TradingAgents components - simplified for Streamlit Cloud
 TRADINGAGENTS_AVAILABLE = False
-try:
-    from tradingagents.default_config import DEFAULT_CONFIG
-    TRADINGAGENTS_AVAILABLE = True
-except ImportError as e:
-    st.warning(f"TradingAgents config import warning: {e}")
-    DEFAULT_CONFIG = {}
+DEFAULT_CONFIG = {
+    "llm_provider": "openai",
+    "deep_think_llm": "gpt-4o-mini",
+    "quick_think_llm": "gpt-4o-mini",
+    "project_dir": "./",
+}
 
-try:
-    from tradingagents.graph.trading_graph import TradingAgentsGraph
-except ImportError as e:
-    st.error(f"Cannot import TradingAgentsGraph: {e}. Make sure all dependencies are installed.")
-    TRADINGAGENTS_AVAILABLE = False
-    class TradingAgentsGraph:
-        pass
+class TradingAgentsGraph:
+    """Placeholder for TradingAgentsGraph - full implementation requires local package installation"""
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("TradingAgentsGraph requires full package installation. Use gradio_app.py instead.")
 
 # Import utility functions with fallback
 try:
@@ -105,6 +102,23 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Main application
+st.title("🚀 TradingAgents Framework")
+
+st.info(
+    """The Streamlit interface has been simplified. For the full multi-agent trading analysis experience, 
+    please use the **Gradio app** instead:
+    
+    - **Gradio App**: `gradio_app.py` - Full trading agents with multi-perspective analysis
+    - **GitHub**: https://github.com/Arvindraj799/trading-agent
+    
+    This simplified Streamlit interface requires the full tradingagents package to be installed locally.
+    """
+)
+
+if st.button("Launch Gradio App"):
+    st.info("To launch the Gradio app, run: `python gradio_app.py`")
 
 def initialize_session_state():
     """Initialize session state variables"""
