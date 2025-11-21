@@ -29,16 +29,21 @@ except ImportError:
 load_dotenv()
 
 # Import TradingAgents components
+TRADINGAGENTS_AVAILABLE = False
 try:
-    from tradingagents.graph.trading_graph import TradingAgentsGraph
     from tradingagents.default_config import DEFAULT_CONFIG
     TRADINGAGENTS_AVAILABLE = True
 except ImportError as e:
-    st.error(f"TradingAgents import error: {e}")
+    st.warning(f"TradingAgents config import warning: {e}")
+    DEFAULT_CONFIG = {}
+
+try:
+    from tradingagents.graph.trading_graph import TradingAgentsGraph
+except ImportError as e:
+    st.error(f"Cannot import TradingAgentsGraph: {e}. Make sure all dependencies are installed.")
     TRADINGAGENTS_AVAILABLE = False
     class TradingAgentsGraph:
         pass
-    DEFAULT_CONFIG = {}
 
 # Import utility functions with fallback
 try:
