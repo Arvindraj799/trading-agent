@@ -20,7 +20,6 @@ try:
     from plotly.subplots import make_subplots
     PLOTLY_AVAILABLE = True
 except ImportError:
-    st.error("Plotly not available. Charts will be disabled.")
     PLOTLY_AVAILABLE = False
     go = None
     px = None
